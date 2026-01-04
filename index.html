@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Vio (rus) 2026 | Enhanced</title>
+    <style>
+        :root {
+            --neon: #00f2ff;
+            --bg: #0a0a0a;
+            --card-bg: #151515;
+            --danger: #ff4d4d;
+            --gold: #ffd700;
+        }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .site-logo { font-size: 1.5em; font-weight: bold; }
+        .site-logo span { color: var(--neon); }
+
+        .header-controls { display: flex; gap: 10px; }
+
+        #auth-btn, #open-profile-btn {
+            background: #222; color: #fff; border: 1px solid #444;
+            padding: 8px 15px; border-radius: 8px; cursor: pointer;
+        }
+
+        /* МОДАЛКА ПРОФИЛЯ */
+        .overlay {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1999; backdrop-filter: blur(8px);
+        }
+
+        #profile-modal {
+            display: none; position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #151515; border: 2px solid var(--neon);
+            border-radius: 20px; padding: 25px; z-index: 2000;
+            width: 350px; text-align: center; max-height: 80vh; overflow-y: auto;
+        }
+
+        .avatar-container { position: relative; width: 100px; height: 100px; margin: 0 auto 15px; }
+        #profile-img {
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: 50%; border: 2px solid var(--neon); background: #222;
+        }
+        .change-photo-btn {
+            position: absolute; bottom: 0; right: 0;
+            background: var(--neon); color: #000; border: none;
+            border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold;
+        }
+
+        .stats-item {
+            background: #222; margin: 8px 0; padding: 10px;
+            border-radius: 10px; display: flex; justify-content: space-between; font-size: 0.9em;
+        }
+
+        #user-games-list {
+            margin-top: 15px; text-align: left; border-top: 1px solid #333; padding-top: 10px;
+        }
+        .mini-game-item { font-size: 0.8em; color: #aaa; margin: 4px 0; }
+
+        /* ОСТАЛЬНЫЕ СТИЛИ */
+        #admin-zone {
+            display: none; background: #1a1a1a; border: 2px solid var(--neon);
+            border-radius: 15px; padding: 20px; width: 100%; max-width: 600px; margin-bottom: 30px;
+        }
+
+        input, textarea, select {
+            width: 100%; padding: 12px; margin: 10px 0;
+            background: #252525; border: 1px solid #333; color: #fff; border-radius: 8px;
+        }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .tab-btn {
+            background: #222; color: #fff; border: 1px solid var(--neon);
+            padding: 10px 20px; border-radius: 20px; cursor: pointer;
+        }
+        .tab-btn.active { background: var(--neon); color: #000; font-weight: bold; }
+
+        .store-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px; width: 100%; max-width: 1200px;
+        }
+
+        .game-card {
+            background: var(--card-bg); border-radius: 20px; padding: 20px;
+            border: 1px solid #222; display: flex; flex-direction: column; position: relative;
+        }
+        .game-card h2 { margin: 0; color: var(--neon); font-size: 1.2em; }
+        .game-desc { color: #aaa; font-size: 0.85em; margin: 10px 0; }
+
+        .download-link {
+            display: block; text-align: center; background: #333; color: #fff;
+            text-decoration: none; padding: 12px; border-radius: 10px; font-weight: bold;
+        }
+        .download-link:hover { background: var(--neon); color: #000; }
+
+        #admin-menu-btn {
+            position: fixed; bottom: 20px; right: 20px; display: none;
+            background: rgba(0,0,0,0.8); padding: 12px; border-radius: 10px; border: 1px solid var(--neon);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="site-logo">Google <span>Vio 2026</span></div>
+        <div class="header-controls">
+            <button id="open-profile-btn" onclick="toggleProfile(true)">👤 Профиль</button>
+            <button id="auth-btn" onclick="handleAuth()">Вход</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ПРОФИЛЯ -->
+    <div id="profile-overlay" class="overlay" onclick="toggleProfile(false)"></div>
+    <div id="profile-modal">
+        <div class="avatar-container">
+            <img id="profile-img" src="via.placeholder.com" alt="Avatar">
+            <button class="change-photo-btn" onclick="document.getElementById('photo-input').click()">+</button>
+            <input type="file" id="photo-input" hidden accept="image/*" onchange="uploadPhoto(this)">
+        </div>
+        <h3 id="user-name">Пользователь 2026</h3>
+        
+        <div class="stats-item">
+            <span>Статус:</span>
+            <span id="user-status" style="color:var(--neon)">Новичок</span>
+        </div>
+        <div class="stats-item">
+            <span>Отзывов:</span>
+            <span id="user-reviews-count">0</span>
+        </div>
+
+        <div id="user-games-list">
+            <div style="font-size: 0.8em; color: var(--neon); margin-bottom: 5px;">МОИ АКТИВНЫЕ ИГРЫ:</div>
+            <div id="games-container">Нет активности</div>
+        </div>
+
+        <button onclick="toggleProfile(false)" style="margin-top:20px; background:var(--neon); border:none; padding:10px; border-radius:8px; width:100%; cursor:pointer; font-weight:bold;">Закрыть</button>
+    </div>
+
+    <!-- АДМИН ПАНЕЛЬ -->
+    <div id="admin-zone">
+        <h2>Добавить контент</h2>
+        <input type="text" id="title" placeholder="Название">
+        <textarea id="desc" placeholder="Описание"></textarea>
+        <input type="text" id="link" placeholder="Ссылка">
+        <select id="category">
+            <option value="popular">Популярное</option>
+            <option value="paid">Платное</option>
+            <option value="books">Книги</option>
+        </select>
+        <button onclick="saveGame()" style="background:var(--neon); width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold;">Опубликовать</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="filter('all', this)">Все</button>
+        <button class="tab-btn" onclick="filter('popular', this)">Популярное</button>
+        <button class="tab-btn" onclick="filter('paid', this)">Платное</button>
+        <button class="tab-btn" onclick="filter('books', this)">Книги</button>
+    </div>
+
+    <div class="store-grid" id="store"></div>
+
+    <div id="admin-menu-btn" onclick="toggleAdminZone()">⚙️</div>
+
+    <script>
+        let games = JSON.parse(localStorage.getItem('google_vio_db_2026')) || [];
+        let isAdmin = localStorage.getItem('is_admin_logged') === 'true';
+        let userPhoto = localStorage.getItem('user_photo_2026') || '';
+
+        function init() {
+            renderGames('all');
+            if (userPhoto) document.getElementById('profile-img').src = userPhoto;
+            if (isAdmin) {
+                document.getElementById('auth-btn').textContent = "Выход (Admin)";
+                document.getElementById('admin-menu-btn').style.display = 'block';
+                document.getElementById('user-name').textContent = "Разработчик";
+            }
+        }
+
+        // --- ЛОГИКА ФОТО ---
+        function uploadPhoto(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    localStorage.setItem('user_photo_2026', base64);
+                    document.getElementById('profile-img').src = base64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- ПРОФИЛЬ И ИГРЫ ---
+        function toggleProfile(show) {
+            document.getElementById('profile-modal').style.display = show ? 'block' : 'none';
+            document.getElementById('profile-overlay').style.display = show ? 'block' : 'none';
+            if(show) updateProfileStats();
+        }
+
+        function updateProfileStats() {
+            let reviewedGames = [];
+            let totalReviews = 0;
+
+            games.forEach(g => {
+                if(g.reviews && g.reviews.length > 0) {
+                    totalReviews += g.reviews.length;
+                    reviewedGames.push(g.title);
+                }
+            });
+
+            document.getElementById('user-reviews-count').textContent = totalReviews;
+            const container = document.getElementById('games-container');
+            container.innerHTML = reviewedGames.length 
+                ? reviewedGames.map(name => `<div class="mini-game-item">🎮 ${name}</div>`).join('') 
+                : 'Нет активности';
+        }
+
+        // --- ОСТАЛЬНОЙ ФУНКЦИОНАЛ ---
+        function handleAuth() {
+            if (isAdmin) {
+                localStorage.removeItem('is_admin_logged');
+                location.reload();
+            } else {
+                let pass = prompt("Пароль:");
+                if (pass === "reallyworldgovno192@gmail.com") {
+                    localStorage.setItem('is_admin_logged', 'true');
+                    location.reload();
+                }
+            }
+        }
+
+        function toggleAdminZone() {
+            const az = document.getElementById('admin-zone');
+            az.style.display = az.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function saveGame() {
+            const t = document.getElementById('title').value;
+            const d = document.getElementById('desc').value;
+            const l = document.getElementById('link').value;
+            const c = document.getElementById('category').value;
+            if(!t || !d || !l) return;
+            games.push({ id: Date.now(), title: t, desc: d, link: l, category: c, reviews: [] });
+            localStorage.setItem('google_vio_db_2026', JSON.stringify(games));
+            location.reload();
+        }
+
+        function addReview(gameId) {
+            let text = prompt("Ваш отзыв:");
+            if(!text) return;
+            const game = games.find(g => g.id === gameId);
+            game.reviews.push({ text, date: new Date().toLocaleDateString() });
+            localStorage.setItem('google_vio_db_2026', JSON.stringify(games));
+            renderGames('all');
+        }
+
+        function filter(cat, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGames(cat);
+        }
+
+        function renderGames(cat) {
+            const store = document.getElementById('store');
+            store.innerHTML = '';
+            const filtered = cat === 'all' ? games : games.filter(g => g.category === cat);
+            filtered.forEach(g => {
+                store.innerHTML += `
+                    <div class="game-card">
+                        ${isAdmin ? `<button onclick="deleteGame(${g.id})" style="position:absolute; right:10px; top:10px; background:none; border:none; color:red; cursor:pointer;">Удалить</button>` : ''}
+                        <h2>${g.title}</h2>
+                        <p class="game-desc">${g.desc}</p>
+                        <a href="${g.link}" class="download-link" target="_blank">Перейти</a>
+                        <button onclick="addReview(${g.id})" style="margin-top:10px; background:none; border:1px solid #444; color:#fff; cursor:pointer; font-size:0.7em; padding:5px;">+ Оставить отзыв</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteGame(id) {
+            games = games.filter(g => g.id !== id);
+            localStorage.setItem('google_vio_db_2026', JSON.stringify(games));
+            renderGames('all');
+        }
+
+        init();
+    </script>
+</body>
+</html>
